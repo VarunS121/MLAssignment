@@ -61,11 +61,18 @@
 using namespace std;
 
 int main() {
-    std::string train_path = "./cifar-10-batches-bin/data_batch_1.bin";
+    std::string train_path = "./cifar-10-batches-bin/data_batch_";
     std::string test_path = "./cifar-10-batches-bin/test_batch.bin";
-	std::string meta_file = "./cifar-10-batches-bin/batches.meta.txt";
+		std::string meta_file = "./cifar-10-batches-bin/batches.meta.txt";
 
-    std::vector<Image> train_images = loadCIFARBatch(train_path, 1000);  // Training
+		std::vector<Image> train_images;
+    for(int i = 1; i < 6; i++){
+			string path = train_path + to_string(i) + ".bin";
+			vector<Image> batch = loadCIFARBatch(path, 1000);
+			train_images.insert(train_images.end(), batch.begin(), batch.end());
+		}
+		
+		//std::vector<Image> train_images = loadCIFARBatch(train_path, 1000);  // Training
     std::vector<Image> test_images = loadCIFARBatch(test_path, 1000);    // Testing
 
     std::cout << "Training Logistic Regression..." << std::endl;
@@ -84,14 +91,16 @@ int main() {
 	correct = 0;
 	for (const auto& img : test_images) {
 	    int pred = model.predict(img);
-	    if (pred == img.label)
-        	correct++;
+			if (pred == img.label){
+				correct++;
+				std::cout << "Prediction: " << pred << " Actual: " << img.label << "		CORRECT!!\n";
+			}
 	}
 	std::cout << "LogReg Test Accuracy: " << (float)correct / test_images.size() * 100 << "%\n";
 
 
     std::cout << "\nTraining CNN..." << std::endl;
-    cnnTrainExample(train_images, 10);
+    cnnTrainExample(train_images, 5);
 
     int cnn_correct = 0;
 	for (const auto& img : train_images) {
@@ -107,9 +116,10 @@ int main() {
 	for (const auto& img : test_images) {
 	    std::vector<float> out = cnnForwardExample(img);
 	    int pred = argmax(out);
-	    std::cout << "Prediction: " << pred << " Actual: " << img.label << endl;
-			if (pred == img.label)
-        	cnn_correct++;
+			if (pred == img.label){
+				cnn_correct++;
+				std::cout << "Prediction: " << pred << " Actual: " << img.label << "		CORRECT!!\n";
+			}
 	}
 	std::cout << "CNN Test Accuracy (multiclass): " << (float)cnn_correct / test_images.size() * 100 << "%\n";
 

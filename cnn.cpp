@@ -492,6 +492,9 @@ void cnnTrainExample(std::vector<Image>& images, int epochs) {
 
         std::shuffle(images.begin(), images.end(), std::mt19937{ std::random_device{}() });
 		//std::cout << "Shuffle done\n";
+        float count = 0;
+        float total = images.size();
+        //std::cout << "Progress: " << (count/total) * 100 << "% ";
         for (const auto& img : images) {
             auto pred = cnnForward(img);
             loss_sum += crossEntropyLoss(pred, img.label);
@@ -499,8 +502,12 @@ void cnnTrainExample(std::vector<Image>& images, int epochs) {
 
             if (argmax(pred) == img.label) correct++;
             cnnBackward(pred, img.label);
+            count++;
+            float progress = (count/total) * 100.0;
+            std::cout << "Progress: " << progress << "%\r";
 			//std::cout << "backward done\n";
         }
+        std::cout << "\n";
 
         float acc = 100.0f * correct / images.size();
         std::cout << "Epoch " << e + 1 << ": Loss = " << loss_sum / images.size() << ", Accuracy = " << acc << "%\n";

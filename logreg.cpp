@@ -35,7 +35,9 @@ int LogisticRegression::predict(const Image& img) const {
 void LogisticRegression::train(const std::vector<Image>& images, int epochs) {
     for (int epoch = 0; epoch < epochs; ++epoch) {
         std::cout << "Epoch: " << epoch+1 << "/10\n";
-		for (const auto& img : images) {
+		float count = 0;
+        float total = images.size();
+        for (const auto& img : images) {
             std::vector<float> probs = predict_proba(img);
 
             for (int c = 0; c < num_classes; ++c) {
@@ -47,6 +49,10 @@ void LogisticRegression::train(const std::vector<Image>& images, int epochs) {
 
                 biases[c] += learning_rate * error;
             }
+            count++;
+            float progress = (count/total) * 100.0;
+            std::cout << "Progress: " << progress << "%\r";
         }
+        std::cout << std::endl;
     }
 }
