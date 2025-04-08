@@ -91,7 +91,7 @@ int main() {
 
 
     std::cout << "\nTraining CNN..." << std::endl;
-    cnnTrainExample(train_images, 5);
+    cnnTrainExample(train_images, 10);
 
     int cnn_correct = 0;
 	for (const auto& img : train_images) {
@@ -103,11 +103,12 @@ int main() {
 	std::cout << "CNN Train Accuracy (multiclass): " << (float)cnn_correct / train_images.size() * 100 << "%\n";
 
 
-    cnn_correct = 0;
+  cnn_correct = 0;
 	for (const auto& img : test_images) {
 	    std::vector<float> out = cnnForwardExample(img);
 	    int pred = argmax(out);
-	    if (pred == img.label)
+	    std::cout << "Prediction: " << pred << " Actual: " << img.label << endl;
+			if (pred == img.label)
         	cnn_correct++;
 	}
 	std::cout << "CNN Test Accuracy (multiclass): " << (float)cnn_correct / test_images.size() * 100 << "%\n";

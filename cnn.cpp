@@ -253,6 +253,7 @@ struct Conv2D {
       int out_h = h - kernel_size + 1;
       int out_w = w - kernel_size + 1;
 
+      //std::cout << input.size() << " " << h << " "<< w << "\n";
       std::vector<std::vector<std::vector<float>>> out(out_channels,
           std::vector<std::vector<float>>(out_h, std::vector<float>(out_w)));
 
@@ -276,6 +277,8 @@ struct Conv2D {
       int w = input_cache[0][0].size();
       int out_h = h - kernel_size + 1;
       int out_w = w - kernel_size + 1;
+
+      //std::cout << input_cache.size() << " " << h << " "<< w << "\n";
 
       std::vector<std::vector<std::vector<float>>> grad_input(in_channels,
           std::vector<std::vector<float>>(h, std::vector<float>(w, 0.0f)));
@@ -311,12 +314,12 @@ struct MaxPool2D {
     std::vector<std::vector<std::vector<float>>> forward(
         const std::vector<std::vector<std::vector<float>>>& input) {
         int c = input.size();
-        int h = input[0].size() / pool_size;
-        int w = input[0][0].size() / pool_size;
+        int h = input[0].size() / pool_size ;
+        int w = input[0][0].size() / pool_size ;
         max_indices.resize(c, std::vector<std::vector<std::pair<int, int>>>(h, std::vector<std::pair<int, int>>(w)));
         std::vector<std::vector<std::vector<float>>> output(c, std::vector<std::vector<float>>(h, std::vector<float>(w)));
         
-        std::cout << c << " " << h << " "<< w << "\n";
+        //std::cout << c << " " << h << " "<< w << "\n";
         for (int ch = 0; ch < c; ++ch)
             for (int i = 0; i < h; ++i)
                 for (int j = 0; j < w; ++j) {
@@ -332,6 +335,7 @@ struct MaxPool2D {
                                 max_j = s;
                             }
                         }
+                    //std::cout << max_i << " " << max_j << std::endl;
                     output[ch][i][j] = max_val;
                     max_indices[ch][i][j] = { max_i, max_j };
                 }
@@ -343,17 +347,17 @@ struct MaxPool2D {
         int c = grad_output.size();
         int h = grad_output[0].size() * pool_size;
         int w = grad_output[0][0].size() * pool_size;
-
+        //std::cout << c << " " << h << " "<< w << "\n";
         std::vector<std::vector<std::vector<float>>> grad_input(c, std::vector<std::vector<float>>(h, std::vector<float>(w, 0.0f)));
-		std::cout << "pool back started\n";
+		//std::cout << "pool back started\n";
         for (int ch = 0; ch < c; ++ch)
             for (long unsigned int i = 0; i < grad_output[0].size(); ++i)
                 for (long unsigned int j = 0; j < grad_output[0][0].size(); ++j) {
-					std::cout << "loop: " << ch << " " << i << " " << j << "\n";
+					//std::cout << "loop: " << ch << " " << i << " " << j << "\n";
 					auto [r, s] = max_indices[ch][i][j];
-					std::cout << r << " " << s << "\n";
+					//std::cout << r << " " << s << "\n";
 					grad_input[ch][r % grad_output[0].size()][s% grad_output[0][0].size()] = grad_output[ch][i][j];
-					std::cout << "loop done\n";
+					//std::cout << "loop done\n";
                 }
 
         return grad_input;
@@ -428,7 +432,7 @@ Conv2D conv3(32, 64, 3);
 Conv2D conv4(64, 64, 3);
 MaxPool2D pool2(2);
 
-Dense fc1(6 * 6 * 64, 512);
+Dense fc1(5 * 5 * 64, 512);
 Dense fc2(512, 10);
 
 // Forward pass
@@ -456,46 +460,46 @@ void cnnBackward(const std::vector<float>& pred, int label) {
     std::vector<float> grad_softmax = pred;
     grad_softmax[label] -= 1.0f;
 
-    std::cout << "AllBack started\n";	
+    //std::cout << "AllBack started\n";	
 	auto grad_fc2 = fc2.backward(grad_softmax);
     for (auto& v : grad_fc2) v *= relu_deriv(v);
     auto grad_fc1 = fc1.backward(grad_fc2);
 
-    auto grad_flat = unflatten(grad_fc1, 64, 6, 6);
-	std::cout << "FlatBack done\n";
+    auto grad_flat = unflatten(grad_fc1, 64, 5, 5);
+	//std::cout << "FlatBack done\n";
     auto grad_pool2 = pool2.backward(grad_flat);
-	std::cout << "pool2Back done\n";
+	//std::cout << "pool2Back done\n";
     auto grad_conv4 = conv4.backward(grad_pool2);
-	std::cout << "conv4Back done\n";
+	//std::cout << "conv4Back done\n";
     auto grad_conv3 = conv3.backward(grad_conv4);
-	std::cout << "conv3Back done\n";
+	//std::cout << "conv3Back done\n";
 
     auto grad_pool1 = pool1.backward(grad_conv3);
-	std::cout << "pool1Back done\n";
+	//std::cout << "pool1Back done\n";
     auto grad_conv2 = conv2.backward(grad_pool1);
-	std::cout << "conv2Back done\n";
+	//std::cout << "conv2Back done\n";
     conv1.backward(grad_conv2);
-	std::cout << "conv1Back done\n";
+	//std::cout << "conv1Back done\n";
 }
 
 // Training function
 void cnnTrainExample(std::vector<Image>& images, int epochs) {
     std::cout << "CNN started\n";
 	for (int e = 0; e < epochs; ++e) {
-        std::cout << "Epoch: " << e+1 << "/10\n";
+        std::cout << "Epoch: " << e+1 << "/" << epochs << "\n";
 		float loss_sum = 0.0f;
         int correct = 0;
 
         std::shuffle(images.begin(), images.end(), std::mt19937{ std::random_device{}() });
-		std::cout << "Shuffle done\n";
+		//std::cout << "Shuffle done\n";
         for (const auto& img : images) {
             auto pred = cnnForward(img);
             loss_sum += crossEntropyLoss(pred, img.label);
-			std::cout << "all forward and CEL done done\n";
+			//std::cout << "all forward and CEL done done\n";
 
             if (argmax(pred) == img.label) correct++;
             cnnBackward(pred, img.label);
-			std::cout << "backward done\n";
+			//std::cout << "backward done\n";
         }
 
         float acc = 100.0f * correct / images.size();

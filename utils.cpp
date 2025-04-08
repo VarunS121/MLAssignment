@@ -4,7 +4,7 @@
 #include <ctime>
 #include <algorithm>
 
-float learning_rate = 0.01f;
+float learning_rate = 0.001f;
 
 float randomWeight() {
     // Xavier initialization range
